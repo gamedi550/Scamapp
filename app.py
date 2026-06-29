@@ -17,9 +17,7 @@ def generar_pdf_oficial(datos):
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
     
-    # Margen izquierdo estándar: 54pt (0.75 pulgada)
-    
-    # 1. ENCABEZADO ESTILO INSTITUCIONAL (Texto limpio)
+    # 1. ENCABEZADO ESTILO INSTITUCIONAL
     c.setFont("Helvetica-Bold", 11)
     c.setFillColor(colors.HexColor("#1C1C1C"))
     c.drawString(54, height - 60, "DEFENSA")
@@ -61,9 +59,9 @@ def generar_pdf_oficial(datos):
     c.setFont("Helvetica", 9)
     c.drawString(340, height - 180, datos['fecha_lugar'])
     
-    # 4. DESTINATARIO
+    # 4. DESTINATARIO (Línea corregida sin errores de sintaxis)
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(54, height - 220, f"C. {datos['destinatario_grado'] couplings = datos.get('destinatario_grado', '')}")
+    c.drawString(54, height - 220, f"C. {datos['destinatario_grado']}")
     c.drawString(54, height - 234, datos['destinatario_nombre'].upper())
     c.setFont("Helvetica-Bold", 10)
     c.drawString(54, height - 248, "Presente.")
@@ -80,15 +78,14 @@ def generar_pdf_oficial(datos):
         
     # 6. CUERPO DEL TEXTO
     c.setFont("Helvetica", 9.5)
-    textobject = c.beginText(54, height - 340)
-    textobject.setLeading(14)
-    lineas_cuerpo = textwrap.wrap(datos['cuerpo'], width=100)
+    y_cuerpo = height - 340
+    lineas_cuerpo = textwrap.wrap(datos['cuerpo'], width=90)
     for line in lineas_cuerpo:
-        textobject.textLine(line)
-    c.drawText(textobject)
+        c.drawString(54, y_cuerpo, line)
+        y_cuerpo -= 14
     
     # 7. DATOS GENERALES (Mesa de control inferior)
-    y_datos = height - 510
+    y_datos = height - 520
     c.setFont("Helvetica-Bold", 9)
     c.drawString(180, y_datos, f"No. de Guardia Nacional: {datos['no_gn']}")
     c.drawString(180, y_datos - 15, f"R.F.C.: {datos['rfc']}")
@@ -99,10 +96,10 @@ def generar_pdf_oficial(datos):
     # 8. SECCIÓN DE FIRMAS
     c.setFont("Helvetica", 9.5)
     c.drawCentredString(width / 2.0, y_datos - 110, "Atentamente.")
-    c.drawCentredString(width / 2.0, y_datos - 122, "Sufraquio Efectivo. No Reelección.")
+    c.drawCentredString(width / 2.0, y_datos - 122, "Sufragio Efectivo. No Reelección.")
     c.drawCentredString(width / 2.0, y_datos - 134, datos['firmante_cargo'])
     c.setFont("Helvetica-Bold", 10)
-    c.drawCentredString(width / 2.0, y_datos - 180, datos['firmante_nombre'])
+    c.drawCentredString(width / 2.0, y_datos - 170, datos['firmante_nombre'])
     
     c.showPage()
     c.save()
@@ -111,10 +108,10 @@ def generar_pdf_oficial(datos):
 
 # LÓGICA DE LA APLICACIÓN EN STREAMLIT
 st.title("🖨️ Escáner y Editor de Oficios Oficiales")
-st.write("Sube una foto para auto-completar los datos o llena el formato manualmente para descargar un PDF editable impecable.")
+st.write("Sube una foto para auto-completar los datos o llena el formato manualmente para descargar un PDF digital e impecable.")
 
-# Inicializar variables por defecto en el estado de la app
-if 'form_datos' not_in st.session_state:
+# Inicializar variables por defecto
+if 'form_datos' not in st.session_state:
     st.session_state['form_datos'] = {
         "coordinacion": '"Chihuahua"',
         "unidad": "4/o. Btn. Apoyo para la Admón. y Opn. Aduanas.",
@@ -126,17 +123,17 @@ if 'form_datos' not_in st.session_state:
         "destinatario_grado": "Soldado Guardia Nacional",
         "destinatario_nombre": "Gabriel Medina Diaz",
         "antecedentes": "Msje. SWEAR. No. S.P.A. y L./Cred./255/045648 de 24 Dic. 2025, Gdo. por la Cmcia. Gdia. Nal.",
-        "cuerpo": "Por disposición del Comandante de la Guardia Nacional y con fundamento en los artículos 21... Esta Coordinación de Batallón a mi cargo, expide el presente Oficio de Identificación Temporal, el cual tendrá una vigencia del 1/o. de Enero al 31 de diciembre del 2026...",
+        "cuerpo": "Por disposición del Comandante de la Guardia Nacional y con fundamento en los artículos 21, párrafo Décimo segundo, 123 apartado 'B' fracción XIII de la Constitución Política de los Estados Unidos Mexicanos; 42 de la Ley General del Sistema Nacional de Seguridad Pública; 3 de la Ley Federal del Procedimiento Administrativo; 9, 11 fracción I, 12 fracción IV, 18, 21 fracción IV, 18, 21 fracción III de la Ley de la Guardia Nacional; 2 fracción IX, 6, 14, 18 fracción IX, del Reglamento de la Ley de la Guardia Nacional. Esta Coordinación de Batallón a mi cargo, expide el presente Oficio de Identificación Temporal, el cual tendrá una vigencia del 1/o. de Enero al 31 de diciembre del 2026.",
         "no_gn": "202425",
         "rfc": "MEDG950505PUA",
         "curp": "MEDG950505HNTDZB08",
         "cuip": "1T22F40L00422/0325633/MEDG950505PUA/40",
-        "grupo_sangre": "O+ Sanguíneo y Factor R.H.: O+",
+        "grupo_sangre": "O+",
         "firmante_cargo": "El Coronel G.N. Coordinador de Unidad",
         "firmante_nombre": "CORONEL G.N. JOSÉ FRANCISCO RODRÍGUEZ ESTRADA"
     }
 
-# SECCIÓN 1: ESCANEAR POR FOTO (OPCIONAL)
+# SECCIÓN 1: ESCANEAR POR FOTO
 with st.expander("📸 PASO OPTATIVO: Escanear desde una Foto/Imagen", expanded=True):
     archivo_foto = st.file_uploader("Carga la foto del oficio para extraer los textos automáticamente:", type=["jpg", "jpeg", "png"])
     if archivo_foto is not None:
@@ -145,19 +142,18 @@ with st.expander("📸 PASO OPTATIVO: Escanear desde una Foto/Imagen", expanded=
                 img = Image.open(archivo_foto)
                 txt_ocr = pytesseract.image_to_string(img, lang='spa')
                 
-                # Intentar extraer identificadores usando expresiones regulares (Regex)
+                # Extraer usando expresiones regulares
                 rfc_match = re.search(r'[A-Z]{4}\d{6}[A-Z0-9]{3}', txt_ocr)
                 curp_match = re.search(r'[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z0-9]\d', txt_ocr)
                 gn_match = re.search(r'No\.\s*de\s*Guardia\s*Nacional:\s*(\d+)', txt_ocr, re.IGNORECASE)
                 
-                # Actualizar lo que se encuentre de forma inteligente
                 if rfc_match: st.session_state['form_datos']['rfc'] = rfc_match.group(0)
                 if curp_match: st.session_state['form_datos']['curp'] = curp_match.group(0)
                 if gn_match: st.session_state['form_datos']['no_gn'] = gn_match.group(1)
                 
-                st.success("¡Análisis finalizado! Los datos detectados se han cargado en el formulario de abajo.")
+                st.success("¡Análisis finalizado! Los datos detectados se han cargado abajo.")
 
-# SECCIÓN 2: FORMULARIO TOTALMENTE EDITABLE
+# SECCIÓN 2: FORMULARIO EDITABLE
 st.subheader("📝 Modificar Datos del Oficio")
 st.write("Haz clic en cualquier campo para editar el texto libremente:")
 
@@ -196,10 +192,9 @@ dic_datos_actualizados = {
     "cuip": cuip, "grupo_sangre": grupo_sangre, "firmante_cargo": firmante_cargo, "firmante_nombre": firmante_nombre
 }
 
-# SECCIÓN 3: GENERAR Y DESCARGAR PDF LIMPIO Y SELECCIONABLE
+# SECCIÓN 3: GENERAR Y DESCARGAR PDF
 if st.button("🖨️ Generar PDF con Formato Oficial", type="primary"):
     pdf_final = generar_pdf_oficial(dic_datos_actualizados)
-    
     st.success("¡PDF generado perfectamente con tipografía digital!")
     st.download_button(
         label="📥 Descargar PDF Listo para Imprimir",
